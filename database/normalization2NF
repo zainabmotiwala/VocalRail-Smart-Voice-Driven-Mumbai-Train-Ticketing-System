@@ -1,0 +1,53 @@
+import sqlite3
+import os
+
+# Path to your database
+db_path = r'C:\Users\Zainab Motiwala\Desktop\ticket-booking-\database\train_management.db'
+
+# Connect to the database
+conn = sqlite3.connect(db_path)
+cursor = conn.cursor()
+
+# Create the first table with passenger_id, dob, and age
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS PASSENGER_AGE_INFO (
+    passenger_id INTEGER PRIMARY KEY,
+    dob TEXT,
+    age INTEGER
+)
+''')
+
+# Create the second table with passenger_id and all other fields except dob and age
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS PASSENGER_PERSONAL_INFO (
+    passenger_id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    gender TEXT,
+    address TEXT,
+    FOREIGN KEY (passenger_id) REFERENCES PASSENGER_AGE_INFO(passenger_id)
+)
+''')
+
+# Migrate data from the original PASSENGERS table to the new tables
+cursor.execute("SELECT passenger_id, dob, age FROM PASSENGERS")
+age_data = cursor.fetchall()
+cursor.executemany('''
+INSERT INTO PASSENGER_AGE_INFO (passenger_id, dob, age)
+VALUES (?, ?, ?)
+''', age_data)
+
+cursor.execute("SELECT passenger_id, name, gender, address FROM PASSENGERS")
+personal_data = cursor.fetchall()
+cursor.executemany('''
+INSERT INTO PASSENGER_PERSONAL_INFO (passenger_id, name, gender, address)
+VALUES (?, ?, ?, ?)
+''', personal_data)
+
+# Rename the original PASSENGERS table to OLD_PASSENGERS
+cursor.execute("ALTER TABLE PASSENGERS RENAME TO OLD_PASSENGERS")
+
+# Commit changes and close connection
+conn.commit()
+conn.close()
+
+print("Tables split successfully! Original table renamed to OLD_PASSENGERS.")

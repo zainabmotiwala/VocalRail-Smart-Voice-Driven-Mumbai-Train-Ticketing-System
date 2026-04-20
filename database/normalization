@@ -1,0 +1,37 @@
+import sqlite3
+# Connect to the existing database
+conn = sqlite3.connect('database/train_management.db')
+cursor = conn.cursor()
+
+# Create the PASSENGER_PHONES table
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS PASSENGER_PHONES (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    passenger_id INTEGER,
+    phone_no TEXT,
+    FOREIGN KEY (passenger_id) REFERENCES PASSENGERS (passenger_id)
+)
+''')
+
+conn.commit()
+conn.close()
+
+print("PASSENGER_PHONES table created successfully.")
+
+conn = sqlite3.connect("C:/Users/Zainab Motiwala/Desktop/ticket-booking-/database/train_management.db")
+cursor = conn.cursor()
+
+# Fetch passenger_id and phone_no
+cursor.execute("SELECT passenger_id, phone_no FROM PASSENGERS")
+rows = cursor.fetchall()
+
+# Split the phone_no field and insert into new table
+for passenger_id, phone_no in rows:
+    phones = [p.strip() for p in phone_no.split(',')]
+    for phone in phones:
+        cursor.execute("INSERT INTO PASSENGER_PHONES (passenger_id, phone_no) VALUES (?, ?)", (passenger_id, phone))
+
+conn.commit()
+conn.close()
+
+print("Phone numbers normalized into PASSENGER_PHONES table.")
